@@ -12,10 +12,12 @@ using namespace std;
 /*
 Add all the required standard and developed libraries here
 */
+#include <vector>
 
 /*
 Put/Define any helper function/definitions you need here
 */
+
 int main(int argc, char* argv[])
 {
 	/* This is the front end of your project.
@@ -27,13 +29,10 @@ int main(int argc, char* argv[])
 	*/
 
 	char instMem[4096];
-
-
 	if (argc < 2) {
 		//cout << "No file name entered. Exiting...";
 		return -1;
 	}
-
 	ifstream infile(argv[1]); //open the file
 	if (!(infile.is_open() && infile.good())) {
 		cout<<"error opening file\n";
@@ -41,19 +40,57 @@ int main(int argc, char* argv[])
 	}
 	string line; 
 	int i = 0;
+	vector<string> pairs; 
+	char x,y;
 	while (infile) {
 			infile>>line;
 			stringstream line2(line);
-			char x; 
 			line2>>x;
-			instMem[i] = x; // be careful about hex
-			i++;
-			line2>>x;
-			instMem[i] = x; // be careful about hex
-			cout<<instMem[i]<<endl;
-			i++;
+			line2>>y; 
+			string pair;  // temp string to bring to bytes together
+			pair += x; 
+			pair += y; 
+			pairs.push_back(pair); // now the vector pairs will hold the pairs of bytes
+								   // exactly how the instMem files have it
+			i++; 
 		}
 	int maxPC= i/4; 
+	i--; 
+	// i is now the total number of two byte pairs subtracting the endoffile '00'
+
+	// copy count so i can manipulate it
+	int count = i/2; 
+	vector<string> instructions; 
+	i--; // accounts for starting to count at index 0
+	// im reading the pairs vector backwards starting at the end
+	//cout << i << endl;
+	
+		//instructions.insert(instructions.begin(), instruction);
+	while(i > 0)
+	{
+		string instruction; 
+		//cout << pairs[i] << endl; 
+		instruction += pairs[i];
+		i--;
+		instruction += pairs[i];
+		i--;
+		instruction += pairs[i];
+		i--;
+		instruction += pairs[i];
+		i--;
+		instructions.insert(instructions.begin(), instruction);
+	}
+	int numofInstructions = (count/2);
+	// cout << instructions[0] << endl;
+	// cout << instructions[finalindex] << endl;
+	for (int k = 0; k < numofInstructions; k++)
+	{
+		cout << instructions[k] << endl;
+	}
+	
+	// at this point, the number of instructions and instructions are stored in 
+	// numofInstructions and instructions (vector string)
+
 
 	/* Instantiate your CPU object here.  CPU class is the main class in this project that defines different components of the processor.
 	CPU class also has different functions for each stage (e.g., fetching an instruction, decoding, etc.).
@@ -81,7 +118,7 @@ int main(int argc, char* argv[])
 	int a0 =0;
 	int a1 =0;  
 	// print the results (you should replace a0 and a1 with your own variables that point to a0 and a1)
-	  cout << "(" << a0 << "," << a1 << ")" << endl;
+	  //cout << "(" << a0 << "," << a1 << ")" << endl;
 	
 	return 0;
 
