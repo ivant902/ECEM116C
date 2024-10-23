@@ -13,20 +13,25 @@ using namespace std;
 // 	instruction(bitset<32> fetch); // constructor
 
 // };
+enum instructType {notype, rtype, itype, stype, btype, utype, jtype};
+enum operation{NONE, ADD, XOR, ORI, SRAI, LB, LW, SB, SW, BEQ, LUI, JAL}; 
 
 class CPU {
 private:
 	unsigned long PC; //pc 
-	 
-	
 
 public:
 	CPU();
+	unsigned long getPC();
 	unsigned long readPC();
 	void incPC();
 	void setInstructions(vector<unsigned long> instr);
+	void setOperationAndType(unsigned long opcode, unsigned long funct3);
+	void setControlSignals();
 	int numofInstructions;
 	vector<unsigned long> instructions;
+	instructType instructionType; 
+	operation operationType; 
 
 };
 

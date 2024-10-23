@@ -62,7 +62,8 @@ vector<string> createBinaryFromHex(vector<string> &instructions, int numofInstru
 }
 vector<string> turnPairsToFullInstruction(vector<string> pairs, int i)
 {
-	vector<string> instructions; 
+	vector<string> instructions;
+	i--; 
 	while(i > 0)
 	{
 		string instruction; 
@@ -89,6 +90,7 @@ vector <unsigned long> stringToInt(vector<string> instr, int numofInstructions)
 	}
 	return instructions; 
 }
+
 int main(int argc, char* argv[])
 {
 	/* This is the front end of your project.
@@ -98,12 +100,13 @@ int main(int argc, char* argv[])
 	/* Each cell should store 1 byte. You can define the memory either dynamically, or define it as a fixed size with size 4KB (i.e., 4096 lines). Each instruction is 32 bits (i.e., 4 lines, saved in little-endian mode).
 	Each line in the input file is stored as an hex and is 1 byte (each four lines are one instruction). You need to read the file line by line and store it into the memory. You may need a mechanism to convert these values to bits so that you can read opcodes, operands, etc.
 	*/
-
+	argc = 2; 
+	
 	if (argc < 2) {
 		//cout << "No file name entered. Exiting...";
 		return -1;
 	}
-	ifstream infile(argv[1]); //open the file
+	ifstream infile("24instMem-jswr.txt"); //open the file
 	if (!(infile.is_open() && infile.good())) {
 		cout<<"error opening file\n";
 		return 0; 
@@ -126,7 +129,6 @@ int main(int argc, char* argv[])
 		}
 	// i is now the total number of two byte pairs subtracting the endoffile '00'
 	i--; 
-
 	// turn the byte pairs into 8 byte strings stored in order in the vector
 	vector<string> instructions; 
 	instructions = turnPairsToFullInstruction(pairs, i);
@@ -157,19 +159,21 @@ int main(int argc, char* argv[])
 	myCPU.setInstructions(binaryInstructions);
 	myCPU.numofInstructions = numofInstructions; 
 	
-	
 	bool done = true;
 	while (done == true) // processor's main loop. Each iteration is equal to one clock cycle.  
 	{
 		//fetch
 		unsigned long binary = myCPU.readPC();
-
 		
 		// decode
+		unsigned long opcode = binary & 127;
+		unsigned long funct3 = binary >> 12 & 7; 
+		myCPU.setOperationAndType(opcode, funct3);
+		
 		
 		// ... 
 		myCPU.incPC();
-		if (myCPU.readPC() > maxPC)
+		if (myCPU.getPC() >= maxPC)
 			break;
 	}
 	int a0 =0;
