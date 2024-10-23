@@ -100,13 +100,12 @@ int main(int argc, char* argv[])
 	/* Each cell should store 1 byte. You can define the memory either dynamically, or define it as a fixed size with size 4KB (i.e., 4096 lines). Each instruction is 32 bits (i.e., 4 lines, saved in little-endian mode).
 	Each line in the input file is stored as an hex and is 1 byte (each four lines are one instruction). You need to read the file line by line and store it into the memory. You may need a mechanism to convert these values to bits so that you can read opcodes, operands, etc.
 	*/
-	argc = 2; 
 	
 	if (argc < 2) {
 		//cout << "No file name entered. Exiting...";
 		return -1;
 	}
-	ifstream infile("24instMem-jswr.txt"); //open the file
+	ifstream infile(argv[1]); //open the file
 	if (!(infile.is_open() && infile.good())) {
 		cout<<"error opening file\n";
 		return 0; 
@@ -169,7 +168,7 @@ int main(int argc, char* argv[])
 		unsigned long opcode = binary & 127;
 		unsigned long funct3 = binary >> 12 & 7; 
 		myCPU.setOperationAndType(opcode, funct3);
-		
+		cout << myCPU.instructionType << endl << myCPU.operationType << endl << bitset<32>(funct3) << endl; 
 		
 		// ... 
 		myCPU.incPC();
