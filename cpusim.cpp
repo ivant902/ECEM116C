@@ -13,6 +13,7 @@ using namespace std;
 Add all the required standard and developed libraries here
 */
 #include <vector>
+#include <bitset>
 
 /*
 Put/Define any helper function/definitions you need here
@@ -83,9 +84,8 @@ vector <unsigned long> stringToInt(vector<string> instr, int numofInstructions)
 	vector<unsigned long> instructions; 
 	for (int w = 0; w < numofInstructions; w++)
 	{
-		unsigned long temp; 
-		temp = stoul(instr[w], nullptr, 2);
-		instructions.push_back(temp); 
+		bitset<32> bits(instr[w]);
+		instructions.push_back(bits.to_ulong()); 
 	}
 	return instructions; 
 }
@@ -156,22 +156,22 @@ int main(int argc, char* argv[])
 	// make sure to create a variable for PC and resets it to zero (e.g., unsigned int PC = 0); 
 	myCPU.setInstructions(binaryInstructions);
 	myCPU.numofInstructions = numofInstructions; 
-	unsigned long PC = myCPU.readPC();
-	cout << myCPU.instructions[0] << endl;
+	
+	
 	bool done = true;
-	// while (done == true) // processor's main loop. Each iteration is equal to one clock cycle.  
-	// {
-	// 	//fetch
-	// 	myCPU.readPC();
-		
+	while (done == true) // processor's main loop. Each iteration is equal to one clock cycle.  
+	{
+		//fetch
+		unsigned long binary = myCPU.readPC();
 
-	// 	// decode
 		
-	// 	// ... 
-	// 	myCPU.incPC();
-	// 	if (myCPU.readPC() > maxPC)
-	// 		break;
-	// }
+		// decode
+		
+		// ... 
+		myCPU.incPC();
+		if (myCPU.readPC() > maxPC)
+			break;
+	}
 	int a0 =0;
 	int a1 =0;  
 	// print the results (you should replace a0 and a1 with your own variables that point to a0 and a1)

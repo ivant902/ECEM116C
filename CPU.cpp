@@ -9,8 +9,7 @@ CPU::CPU()
 
 unsigned long CPU::readPC()
 {
-	PC = instructions[PC];
-	return PC;
+	return (instructions[PC]);
 }
 void CPU::incPC()
 {
