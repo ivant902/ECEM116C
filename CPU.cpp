@@ -24,15 +24,21 @@ unsigned long getStypeImmediate(unsigned long immhigh, unsigned long immlow)
 }
 unsigned long getBtypeImmediate(unsigned long binary)
 {
-	unsigned long lowest = (binary >> 7) & 1; //1 bit
-	unsigned long lower = (binary >> 1) & 15; // 4 bits
-	unsigned long higher = (binary >> 17) & 63; // 6 bits
-	unsigned long highest = (binary >> 6) & 1; // 1 bit
-	unsigned long answer; 
-	answer = (highest << 1) | lowest; 
-	answer = (answer << 6) | higher; 
-	answer = (answer << 4) | lower; 
-	return (answer);
+	    // Extracting individual bits and segments for B-type immediate
+    unsigned long imm12 = (binary >> 31) & 1;     // bit 12
+    unsigned long imm10_5 = (binary >> 25) & 0x3F; // bits [10:5]
+    unsigned long imm4_1 = (binary >> 8) & 0xF;   // bits [4:1]
+    unsigned long imm11 = (binary >> 7) & 1;      // bit 11
+
+    // Combine to form the 12-bit immediate
+    unsigned long answer = (imm12 << 12) | (imm11 << 11) | (imm10_5 << 5) | (imm4_1 << 1);
+
+    // Sign-extend the 12-bit immediate to 64-bit (if needed)
+    if (answer & (1 << 12)) {
+        answer |= 0xFFFFFFFFFFFFF000;  // Set upper bits for sign extension
+    }
+
+    return answer;
 }
 unsigned long getUtypeImmediate(unsigned long binary)
 {
@@ -40,15 +46,21 @@ unsigned long getUtypeImmediate(unsigned long binary)
 }
 unsigned long getJtypeImmediate(unsigned long binary)
 {
-	unsigned long lowest = (binary >> 12) & 255;
-	unsigned long lower = (binary >> 8) & 1; 
-	unsigned long higher = (binary >> 1) & 1023; 
-	unsigned long highest = (binary >> 10) & 1;
-	unsigned long answer;  
-	answer = (highest << 8) | lowest; 
-	answer = (answer << 1) | lower; 
-	answer = (answer << 10) | higher;  
-	return (answer);
+	// Extracting individual bits and segments for J-type immediate
+    unsigned long imm20 = (binary >> 31) & 1;      // bit 20
+    unsigned long imm19_12 = (binary >> 12) & 0xFF; // bits [19:12]
+    unsigned long imm11 = (binary >> 20) & 1;      // bit 11
+    unsigned long imm10_1 = (binary >> 21) & 0x3FF; // bits [10:1]
+
+    // Combine to form the 20-bit immediate
+    unsigned long answer = (imm20 << 20) | (imm19_12 << 12) | (imm11 << 11) | (imm10_1 << 1);
+
+    // 32-bit sign extension
+    if (answer & (1 << 20)) {
+        answer |= 0xFFF00000;  // Set upper bits for 32-bit sign extension
+    }
+
+    return answer;
 }
 // register set helpers
 unsigned long getRs1(unsigned long binary)
@@ -79,6 +91,10 @@ CPU::CPU()
 	for (int i = 0; i < 32; i++)
 	{
 		registers[i] = 0;
+	}
+	for (int i = 0; i < 4096; i++)
+	{
+		memory[i] = 0;
 	}
 }
 unsigned long CPU::getPC()
@@ -192,6 +208,7 @@ void CPU::setImmediate(unsigned long binary)
 
 			case btype:
 			immediate = getBtypeImmediate(binary);
+			//cout << immediate<< endl; 
 			break;
 
 			case utype:
@@ -270,8 +287,9 @@ void CPU::setControlSignals()
 		break;
 
 		case JAL:
-		aluMux = true; 
-		break;
+		aluMux = true;
+		regWrite = true;  
+		break; 
 
 		case NONE:
 		exit(1);
@@ -327,10 +345,7 @@ unsigned long CPU::ALU()
 		break;
 
 		case BEQ:
-		if (registers[rs1] == registers[rs2])
-		{
-			PC += (immediate/4); 
-		}
+		
 		break; 
 
 		case ORI:
