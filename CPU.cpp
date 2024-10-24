@@ -248,10 +248,12 @@ void CPU::setControlSignals()
 
 		case LB:
 		aluMux = true; 
+		regWrite = true;
 		break;
 
 		case LW:
 		aluMux = true; 
+		regWrite = true;
 		break;
 
 		case LUI:
@@ -321,9 +323,16 @@ unsigned long CPU::ALU()
 		break;
 
 		case LB:
+		if (regWrite == true){
+			int32_t temp = registers[rs1] + immediate;
+			registers[rd] = temp >> 31; 
+		}
 		break;
 
 		case LW:
+		if (regWrite == true){
+			registers[rd] = registers[rs1] + immediate; 
+		}
 		break;
 
 		case LUI:
