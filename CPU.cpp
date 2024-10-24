@@ -72,6 +72,7 @@ CPU::CPU()
 	aluMux = false; 
 	memWrite = false; 
 	regWrite = false;
+	memRead = false; 
 	instructionType = notype; 
 	numofInstructions = 0; 
 	operationType = NONE; 
@@ -91,6 +92,10 @@ unsigned long CPU::readPC()
 void CPU::incPC()
 {
 	PC++;
+}
+void CPU::jumpPC()
+{
+	PC += (immediate/4);
 }
 void CPU::setInstructions(vector<unsigned long> instr)
 {
@@ -206,8 +211,6 @@ void CPU::setImmediate(unsigned long binary)
 // 	rs1 = registers[rs1];
 // 	rs2 = registers[rs2];
 // }
-
-
 void CPU::setControlSignals()
 {
 	switch(operationType)
@@ -225,11 +228,14 @@ void CPU::setControlSignals()
 		case SB:
 		aluMux = false; 
 		regWrite = true; 
+		memRead = true; 
 		break;
 
 		case SW:
 		aluMux = false; 
 		regWrite = true; 
+		memRead = true; 
+
 		break;
 
 		case BEQ:
@@ -238,7 +244,7 @@ void CPU::setControlSignals()
 
 		case ORI:
 		aluMux = true; 
-		memWrite = true; 
+		regWrite = true; 
 		break;
 
 		case SRAI:
@@ -249,11 +255,13 @@ void CPU::setControlSignals()
 		case LB:
 		aluMux = true; 
 		regWrite = true;
+		memRead = true;
 		break;
 
 		case LW:
 		aluMux = true; 
 		regWrite = true;
+		memRead = true;
 		break;
 
 		case LUI:
@@ -297,25 +305,36 @@ unsigned long CPU::ALU()
 		break;
 
 		case SB:
-		if(regWrite == true){
+		if(regWrite == true && memRead == true){
+
 			unsigned long temp = registers[rs1] + immediate;
-			temp = temp >> 31; 
-			registers[rs2] = temp; 
+			if (temp < 4096)
+			{
+				memory[temp] = registers[rs2] & 0xFF;
+			}
+			
 		}
 		break;
 
 		case SW:
-		if(regWrite == true){
-			registers[rs2] = registers[rs1] + immediate;
+		if(regWrite == true && memRead == true){
+			unsigned long temp = registers[rs1] + immediate;
+			if (temp < 4096 )
+			{
+				memory[temp] = registers[rs1] + immediate;
+			}
 		}
 		break;
 
 		case BEQ:
+		if (registers[rs1] == registers[rs2])
+		{
+			PC += (immediate/4); 
+		}
 		break; 
 
 		case ORI:
-		answer = rs1 | immediate;
-		if (memWrite == true){registers[rd] = answer;}
+		if (regWrite == true){registers[rd] = registers[rs1] | immediate;}
 		break;
 
 		case SRAI:
@@ -323,22 +342,35 @@ unsigned long CPU::ALU()
 		break;
 
 		case LB:
-		if (regWrite == true){
-			int32_t temp = registers[rs1] + immediate;
-			registers[rd] = temp >> 31; 
+		if (regWrite == true && memRead == true){
+			unsigned long temp = registers[rs1] + immediate;
+			if (temp < 4096)
+			{
+				int8_t byte =  memory[temp];
+				registers[rd] = (int32_t) byte; 
+			}
+			
 		}
 		break;
 
 		case LW:
-		if (regWrite == true){
-			registers[rd] = registers[rs1] + immediate; 
+		if (regWrite == true && memRead == true){
+			unsigned long temp = registers[rs1] + immediate; 
+			if (temp < 4096)
+			{
+				int32_t word = memory[temp] |
+                           (memory[temp + 1] << 8) |
+                           (memory[temp + 2] << 16) |
+                           (memory[temp + 3] << 24);
+            // Store the 32-bit word in the destination register
+            registers[rd] = word;
+			}
 		}
 		break;
 
 		case LUI:
 		if(regWrite == true){
-		int32_t temp = immediate;
-		registers[rd] = temp << 12;
+		registers[rd] = immediate << 12;
 		}
 		break;
 

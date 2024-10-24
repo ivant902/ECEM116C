@@ -100,8 +100,8 @@ int main(int argc, char* argv[])
 	/* Each cell should store 1 byte. You can define the memory either dynamically, or define it as a fixed size with size 4KB (i.e., 4096 lines). Each instruction is 32 bits (i.e., 4 lines, saved in little-endian mode).
 	Each line in the input file is stored as an hex and is 1 byte (each four lines are one instruction). You need to read the file line by line and store it into the memory. You may need a mechanism to convert these values to bits so that you can read opcodes, operands, etc.
 	*/
-	//argc = 2; 
-	//argv[1] = "24instMem-r.txt";
+	argc = 2; 
+	argv[1] = "24instMem-jswr.txt";
 	if (argc < 2) {
 		//cout << "No file name entered. Exiting...";
 		return -1;
@@ -172,6 +172,16 @@ int main(int argc, char* argv[])
 		myCPU.setRegister(binary);
 		myCPU.setImmediate(binary);
 		myCPU.setControlSignals();
+		if ((myCPU.operationType == BEQ) && (myCPU.registers[myCPU.rs1] == myCPU.registers[myCPU.rs2]))
+		{
+			myCPU.jumpPC();
+			continue;
+		}
+		else if (myCPU.operationType == JAL)
+		{ 
+			myCPU.jumpPC();
+			continue;
+		}
 		myCPU.ALU();
 		
 		// ... 
@@ -179,11 +189,11 @@ int main(int argc, char* argv[])
 		if (myCPU.getPC() >= maxPC)
 			break;
 	}
-	// for (int z = 1; z < 33; z++)
-	// {
-	// 	cout << myCPU.displayReg(z) << endl;
-	// }
-	int32_t a0 = myCPU.displayReg(7);
+	for (int z = 1; z < 33; z++)
+	{
+		cout << myCPU.displayReg(z) << endl;
+	}
+	int32_t a0 = myCPU.displayReg(10);
 	int32_t a1 = myCPU.displayReg(11);  
 	// print the results (you should replace a0 and a1 with your own variables that point to a0 and a1)
 	cout << "(" << a0 << "," << a1 << ")" << endl;

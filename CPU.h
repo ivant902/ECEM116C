@@ -52,7 +52,7 @@ public:
 	// beware the values in registers are just indexes to which register to acces
 	void setRegister(unsigned long binary);
 	void setImmediate(unsigned long binary);
-	//void generateRegister();
+	void jumpPC();
 
 	void setControlSignals();
 	unsigned long ALUMUX();
@@ -60,6 +60,7 @@ public:
 
 	// data variables to store register/immediate/general info
 	int32_t registers[33]; 
+	uint8_t memory[4096] = {0};
 	int32_t displayReg(int x);
 	unsigned long rs1; 
 	unsigned long rs2;
@@ -79,6 +80,7 @@ public:
 	bool aluMux; // 0 is rs2, 1 is imm gen
 	bool memWrite; 
 	bool regWrite;
+	bool memRead;
 
 };
 
