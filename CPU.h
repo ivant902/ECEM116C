@@ -16,18 +16,9 @@ using namespace std;
 enum instructType {notype, rtype, itype, stype, btype, utype, jtype};
 enum operation{NONE, ADD, XOR, ORI, SRAI, LB, LW, SB, SW, BEQ, LUI, JAL};
 //declaration for immediate gen helper functions 
-unsigned long getItypeImmediate(unsigned long binary);
-unsigned long getItypeShiftAmt(unsigned long binary);
-unsigned long getStypeImmHigh(unsigned long binary);
-unsigned long getStypeImmLow(unsigned long binary);
-unsigned long getStypeImmediate(unsigned long immhigh, unsigned long immlow);
 unsigned long getBtypeImmediate(unsigned long binary);
-unsigned long getUtypeImmediate(unsigned long binary);
 unsigned long getJtypeImmediate(unsigned long binary);
-//declaration for register set helper functions
-unsigned long getRs1(unsigned long binary);
-unsigned long getRs2(unsigned long binary);
-unsigned long getRd(unsigned long binary);
+
 // function declarations that are used in main to bring in the hex bytes in the right order and into binary
 string hexChartoBinary(char hex);
 string hextoBinary(const string &hex);
@@ -40,26 +31,23 @@ private:
 	unsigned long realPC;
 public:
 	CPU();
-	unsigned long getPC();
-	unsigned long getRealPC();
-	unsigned long readPC();
+	unsigned long getPC(); // basically this is the instruction count
+	unsigned long getRealPC(); // get the actual value of PC
+	unsigned long readPC(); // read the instruction at the PC
 	unsigned long getImmediate();
 	void incPC();
 	// used to bring instructions from main and load them into the CPU
 	void setInstructions(vector<unsigned long> instr);
-
-	// recognize the operation and type; info is used for set register/set immediate
 	void setOperationAndType(unsigned long opcode, unsigned long funct3);
 
 	// load the appropriate registers with the values to be used in the alu
 	// beware the values in registers are just indexes to which register to acces
 	void setRegister(unsigned long binary);
 	void setImmediate(unsigned long binary);
-	void jumpPC();
-
 	void setControlSignals();
-	unsigned long ALUMUX();
-	unsigned long ALU();
+	void jumpPC();
+	unsigned long ALUMUX(); // determines to use immediate or rs2 in the alu
+void ALU();
 
 	// data variables to store register/immediate/general info
 	int32_t registers[33]; 

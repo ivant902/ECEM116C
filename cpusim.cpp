@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
 
 	// use 'i' to define the total number of instructions from file
 	int numofInstructions = i/4; 
-	int maxPC = numofInstructions; 
+	int maxPC = i; 
 
 	// turn string hex instructions into string binary
 	instructions = createBinaryFromHex(instructions, numofInstructions); 
@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
 		
 		// ... 
 		myCPU.incPC();
-		if (myCPU.getPC() >= maxPC)
+		if (myCPU.getRealPC() > maxPC)
 			break;
 	}
 	// for (int z = 1; z < 33; z++)
