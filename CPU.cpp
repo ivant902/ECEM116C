@@ -2,23 +2,23 @@
 
 // helper functions 
 // immediate generator helpers
-unsigned long getBtypeImmediate(unsigned long binary)
+int32_t getBtypeImmediate(int32_t binary)
 {
-    unsigned long imm12 = (binary >> 31) & 1;     
-    unsigned long imm10_5 = (binary >> 25) & 0x3F;
-    unsigned long imm4_1 = (binary >> 8) & 0xF; 
-    unsigned long imm11 = (binary >> 7) & 1; 
-    unsigned long answer = (imm12 << 12) | (imm11 << 11) | (imm10_5 << 5) | (imm4_1 << 1);
+    int32_t imm12 = (binary >> 31) & 1;     
+    int32_t imm10_5 = (binary >> 25) & 0x3F;
+    int32_t imm4_1 = (binary >> 8) & 0xF; 
+    int32_t imm11 = (binary >> 7) & 1; 
+    int32_t answer = (imm12 << 12) | (imm11 << 11) | (imm10_5 << 5) | (imm4_1 << 1);
     if (answer & (1 << 12)) {answer |= 0xFFFFFFFFFFFFF000;}
     return answer;
 }
-unsigned long getJtypeImmediate(unsigned long binary)
+int32_t getJtypeImmediate(int32_t binary)
 {
-    unsigned long imm20 = (binary >> 31) & 1;
-    unsigned long imm19_12 = (binary >> 12) & 0xFF;
-    unsigned long imm11 = (binary >> 20) & 1;
-    unsigned long imm10_1 = (binary >> 21) & 0x3FF;
-    unsigned long answer = (imm20 << 20) | (imm19_12 << 12) | (imm11 << 11) | (imm10_1 << 1);
+    int32_t imm20 = (binary >> 31) & 1;
+    int32_t imm19_12 = (binary >> 12) & 0xFF;
+    int32_t imm11 = (binary >> 20) & 1;
+    int32_t imm10_1 = (binary >> 21) & 0x3FF;
+    int32_t answer = (imm20 << 20) | (imm19_12 << 12) | (imm11 << 11) | (imm10_1 << 1);
     if (answer & (1 << 20)) {answer |= 0xFFF00000;}
     return answer;
 }
@@ -29,19 +29,19 @@ CPU::CPU() : PC(0), numofInstructions(0), aluMux(false), memWrite(false), regWri
 	for (int i = 0; i < 4096; i++){memory[i] = 0;}
 }
 unsigned long CPU::getPC(){return PC;}
-unsigned long CPU::readPC(){return (instructions[PC/4]);}
-unsigned long CPU::getImmediate(){return immediate;}
-void CPU::setInstructions(vector<unsigned long> instr){instructions = instr;}
+int32_t CPU::readPC(){return (instructions[PC/4]);}
+int32_t CPU::getImmediate(){return immediate;}
+void CPU::setInstructions(vector<int32_t> instr){instructions = instr;}
 int32_t CPU::displayReg(int x) {return(registers[x]);}
 void CPU::incPC()
 {
-	PC = PC+4;
+	PC += 4;
 }
 void CPU::jumpPC()
 {
 	PC += immediate; 
 }
-void CPU::setOperationAndType(unsigned long opcode, unsigned long funct3)
+void CPU::setOperationAndType(int32_t opcode, int32_t funct3)
 {
 	switch(opcode)
 		{
@@ -58,7 +58,6 @@ void CPU::setOperationAndType(unsigned long opcode, unsigned long funct3)
 			break;
 
 			case 19: // I-type instruction (ORI, SRAI)
-			case 3: // I-type instruction (LB, LW)
 			instructionType = itype;
 			if (funct3 == 6)
 			{
@@ -68,7 +67,11 @@ void CPU::setOperationAndType(unsigned long opcode, unsigned long funct3)
 			{
 				operationType = SRAI; 
 			}
-			else if (funct3 == 0)
+			break;
+			
+			case 3: // I-type instruction (LB, LW)
+			instructionType = itype;
+			if (funct3 == 0)
 			{
 				operationType = LB; 
 			}
@@ -107,14 +110,14 @@ void CPU::setOperationAndType(unsigned long opcode, unsigned long funct3)
 		}
 }
 
-void CPU::setRegister(unsigned long binary)
+void CPU::setRegister(int32_t binary)
 {
 	rs1 = (binary >>15) & 31; 
 	rs2 = (binary >>20) & 31; 
 	rd = (binary >>7) & 31;
 	
 }
-void CPU::setImmediate(unsigned long binary)
+void CPU::setImmediate(int32_t binary)
 { 
 	switch(instructionType)
 		{
@@ -164,7 +167,7 @@ void CPU::setControlSignals()
 		case NONE: exit(1);
 	}	 
 }
-unsigned long CPU::ALUMUX()
+int32_t CPU::ALUMUX()
 {
 	if (aluMux == 1)
 	{return (immediate);}
@@ -185,7 +188,7 @@ void CPU::ALU()
 
 		case SB:
 		if(regWrite == true && memRead == true){
-			unsigned long temp = registers[rs1] + immediate;
+			int32_t temp = registers[rs1] + immediate;
 			if (temp < 4096)
 			{
 				memory[temp] = registers[rs2] & 0xFF;
@@ -195,7 +198,7 @@ void CPU::ALU()
 
 		case SW:
 		if(regWrite == true && memRead == true){
-			unsigned long temp = registers[rs1] + immediate;
+			int32_t temp = registers[rs1] + immediate;
 			if (temp < 4096 )
 			{
 				memory[temp] = registers[rs2] & 0xFF;
@@ -218,7 +221,7 @@ void CPU::ALU()
 
 		case LB:
 		if (regWrite == true && memRead == true){
-			unsigned long temp = registers[rs1] + immediate;
+			int32_t temp = registers[rs1] + immediate;
 			if (temp < 4096)
 			{
 				int8_t byte =  memory[temp];
@@ -229,7 +232,7 @@ void CPU::ALU()
 
 		case LW:
 		if (regWrite == true && memRead == true){
-			unsigned long temp = registers[rs1] + immediate; 
+			int32_t temp = registers[rs1] + immediate; 
 			if (temp < 4096)
 			{
 				int32_t word = memory[temp] |

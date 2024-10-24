@@ -80,9 +80,9 @@ vector<string> turnPairsToFullInstruction(vector<string> pairs, int i)
 	} 
 	return instructions; 
 }
-vector <unsigned long> stringToInt(vector<string> instr, int numofInstructions)
+vector <int32_t> stringToInt(vector<string> instr, int numofInstructions)
 {
-	vector<unsigned long> instructions; 
+	vector<int32_t> instructions; 
 	for (int w = 0; w < numofInstructions; w++)
 	{
 		bitset<32> bits(instr[w]);
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 
 	//turn string binary to int
 
-	vector<unsigned long> binaryInstructions;
+	vector<int32_t> binaryInstructions;
 	binaryInstructions = stringToInt(instructions, numofInstructions);
 
 	// at this point the instructions vector holds all instructions in binary
@@ -163,11 +163,11 @@ int main(int argc, char* argv[])
 	while (done==true) // processor's main loop. Each iteration is equal to one clock cycle.  
 	{
 		//fetch
-		unsigned long binary = myCPU.readPC();
+		int32_t binary = myCPU.readPC();
 		
 		// decode
-		unsigned long opcode = binary & 127;
-		unsigned long funct3 = binary >> 12 & 7; 
+		int32_t opcode = binary & 127;
+		int32_t funct3 = binary >> 12 & 7; 
 		myCPU.setOperationAndType(opcode, funct3);
 		myCPU.setRegister(binary);
 		myCPU.setImmediate(binary);
