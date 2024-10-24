@@ -339,7 +339,10 @@ unsigned long CPU::ALU()
 			unsigned long temp = registers[rs1] + immediate;
 			if (temp < 4096 )
 			{
-				memory[temp] = registers[rs1] + immediate;
+				memory[temp]   = registers[rs2] & 0xFF;
+            	memory[temp + 1] = (registers[rs2] >> 8) & 0xFF;
+            	memory[temp + 2] = (registers[rs2] >> 16) & 0xFF;
+            	memory[temp + 3] = (registers[rs2] >> 24) & 0xFF;
 			}
 		}
 		break;
