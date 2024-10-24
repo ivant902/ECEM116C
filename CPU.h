@@ -37,10 +37,13 @@ vector<string> turnPairsToFullInstruction(vector<string> pairs, vector<string>in
 class CPU {
 private:
 	unsigned long PC; //pc 
+	unsigned long realPC;
 public:
 	CPU();
 	unsigned long getPC();
+	unsigned long getRealPC();
 	unsigned long readPC();
+	unsigned long getImmediate();
 	void incPC();
 	// used to bring instructions from main and load them into the CPU
 	void setInstructions(vector<unsigned long> instr);

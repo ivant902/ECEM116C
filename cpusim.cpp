@@ -179,8 +179,8 @@ int main(int argc, char* argv[])
 		}
 		else if (myCPU.operationType == JAL)
 		{ 
-			unsigned long temp = (myCPU.getPC()+1) * 4; 
-			myCPU.registers[myCPU.rd] = temp;
+
+			myCPU.registers[myCPU.rd] = myCPU.getRealPC() + 4;
 			myCPU.jumpPC();
 			continue;
 		}

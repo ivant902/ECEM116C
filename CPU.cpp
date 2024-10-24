@@ -81,6 +81,7 @@ unsigned long getRd(unsigned long binary)
 CPU::CPU()
 {
 	PC = 0; //set PC to 0
+	realPC = 0;
 	aluMux = false; 
 	memWrite = false; 
 	regWrite = false;
@@ -97,6 +98,10 @@ CPU::CPU()
 		memory[i] = 0;
 	}
 }
+unsigned long CPU::getRealPC()
+{
+	return realPC;
+}
 unsigned long CPU::getPC()
 {
 	return PC; 
@@ -108,10 +113,16 @@ unsigned long CPU::readPC()
 void CPU::incPC()
 {
 	PC++;
+	realPC = realPC+4;
+}
+unsigned long CPU::getImmediate()
+{
+	return immediate;
 }
 void CPU::jumpPC()
 {
 	PC += (immediate/4);
+	realPC += immediate; 
 }
 void CPU::setInstructions(vector<unsigned long> instr)
 {
