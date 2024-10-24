@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
 		else if (myCPU.operationType == JAL)
 		{ 
 
-			myCPU.registers[myCPU.rd] = myCPU.getRealPC() + 4;
+			myCPU.registers[myCPU.rd] = myCPU.getPC() + 4;
 			myCPU.jumpPC();
 			continue;
 		}
@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
 		
 		// ... 
 		myCPU.incPC();
-		if (myCPU.getRealPC() > maxPC)
+		if (myCPU.getPC() > maxPC)
 			break;
 	}
 	// for (int z = 1; z < 33; z++)

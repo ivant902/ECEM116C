@@ -27,12 +27,10 @@ vector<string> turnPairsToFullInstruction(vector<string> pairs, vector<string>in
 //CPU class declaration
 class CPU {
 private:
-	unsigned long PC; //pc 
-	unsigned long realPC;
+	unsigned long PC;
 public:
 	CPU();
 	unsigned long getPC(); // basically this is the instruction count
-	unsigned long getRealPC(); // get the actual value of PC
 	unsigned long readPC(); // read the instruction at the PC
 	unsigned long getImmediate();
 	void incPC();

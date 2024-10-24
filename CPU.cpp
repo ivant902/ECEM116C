@@ -23,24 +23,23 @@ unsigned long getJtypeImmediate(unsigned long binary)
     return answer;
 }
 // CPU member functions
-CPU::CPU() : PC(0), realPC(0), numofInstructions(0), aluMux(false), memWrite(false), regWrite(false), memRead(false), instructionType(notype), operationType(NONE)
+CPU::CPU() : PC(0), numofInstructions(0), aluMux(false), memWrite(false), regWrite(false), memRead(false), instructionType(notype), operationType(NONE)
 { 
 	for (int i = 0; i < 32; i++){registers[i] = 0;}
 	for (int i = 0; i < 4096; i++){memory[i] = 0;}
 }
-unsigned long CPU::getRealPC(){return realPC;}
 unsigned long CPU::getPC(){return PC;}
-unsigned long CPU::readPC(){return (instructions[realPC/4]);}
+unsigned long CPU::readPC(){return (instructions[PC/4]);}
 unsigned long CPU::getImmediate(){return immediate;}
 void CPU::setInstructions(vector<unsigned long> instr){instructions = instr;}
 int32_t CPU::displayReg(int x) {return(registers[x]);}
 void CPU::incPC()
 {
-	realPC = realPC+4;
+	PC = PC+4;
 }
 void CPU::jumpPC()
 {
-	realPC += immediate; 
+	PC += immediate; 
 }
 void CPU::setOperationAndType(unsigned long opcode, unsigned long funct3)
 {
