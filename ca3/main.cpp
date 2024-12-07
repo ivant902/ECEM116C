@@ -5,32 +5,31 @@
 
 using namespace std;
 // Define set entry 
-    struct set {
-        char state;      // M (Modified), S (Shared), I (Invalid)
-        int lru;        // LRU counter
-        bool dirty;     // Dirty bit
-        int tag;        // Tag value
-        set() : state('I'), lru(0), dirty(false), tag(0) {} // Initialize with index as LRU
-        //set() : state('I'), lru(0), dirty(false), tag(0) {} // Initialize to Invalid
-    };
+struct set {
+    char state;      // M (Modified), S (Shared), I (Invalid)
+    int lru;        // LRU counter
+    bool dirty;     // Dirty bit
+    int tag;        // Tag value
+    set() : state('I'), lru(0), dirty(false), tag(0) {} // Initialize with index as LRU
+    //set() : state('I'), lru(0), dirty(false), tag(0) {} // Initialize to Invalid
+};
 // Create 4 caches, each with 4 sets
-    struct cache {
-        set coreCache[4];
-        // Initialize sets with proper indices
-        cache()
-        {
-            for (int i = 0; i < 4; i++){
-                coreCache[i].lru = i; 
-            }
-        } 
-    };
-
+struct cache {
+    set coreCache[4];
+    // Initialize sets with proper indices
+    cache()
+    {
+        for (int i = 0; i < 4; i++){
+            coreCache[i].lru = i; 
+        }
+    } 
+};
 // CPU struct to manage all four caches
-    struct CPU {
-        cache cores[4];
-    };
-
-bool checkCoreCache(CPU cpu, int core, int tag, int &whichSet) 
+struct CPU 
+{
+    cache cores[4];
+};
+bool checkCoreCache(CPU cpu, int core, int tag) 
 {
     bool hit = false; 
     for (int i = 0; i < 4; i++) // iterate through each set in the core's private cache
@@ -38,12 +37,11 @@ bool checkCoreCache(CPU cpu, int core, int tag, int &whichSet)
         if (cpu.cores[core].coreCache[i].tag == tag) // in each set, check if its tag = tag
         {
             hit = true; // send the bool so that we know if the tag is in this cores cache
-            whichSet = i; 
         }
     }
     return hit;
 }
-bool checkAllCoreCache(CPU cpu, int tag, vector<int> &allWhichSet, vector <int> &allWhichCore)
+bool checkAllCoreCache(CPU cpu, int tag)
 {
     bool hit = false; 
     
@@ -54,13 +52,10 @@ bool checkAllCoreCache(CPU cpu, int tag, vector<int> &allWhichSet, vector <int> 
             if (cpu.cores[j].coreCache[i].tag == tag) // in each set, check if its tag = tag
             {
                 hit = true; // send the bool so that we know if the tag is in this cores cache
-                allWhichSet.push_back(i);
-                allWhichCore.push_back(j);
             }
         }
     }
     return hit; 
-    
 }
 int findLRU(CPU &cpu, int pid)
 {
@@ -93,59 +88,193 @@ int findLRU(CPU &cpu, int pid)
     cpu.cores[pid].coreCache[3].lru = temp[3]; 
     return indexOfLru; 
 }
-
-// current structure: 
-// one cpu has 4 caches (one for each core)
+void findTag(CPU &cpu, vector <int> &core, vector <int> &set, int tag)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j= 0; j<4; j++)
+        {
+            if (cpu.cores[i].coreCache[j].tag == tag)
+            {
+                core.push_back(i);
+                set.push_back(j);
+            }
+        }
+    }
+}
+int findTaginCore(CPU &cpu, int core, int tag)
+{
+    int set = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        if (cpu.cores[core].coreCache[i].tag == tag)
+        {
+            return i; 
+        }
+    }
+    return set;
+}
 void runProcess(CPU &cpu, int &cacheHits, int &cacheMisses, int &writebacks, int &broadcasts, int &cacheToCache,
                 vector<int> users, vector<string> commands, vector<int> numbers)
 {
-    // pseudo code
-    // for every instruction, check if the tag is in in coreCache[i].tag
-    // report if there was a hit or miss
-    // if there was a miss, go to the lowest LRU (typically zero) and put that tag into that set
-    
-// P3: read <100>
-    //MOESIF
-    // start at I (invalid)
-    // if you want to modify, go to M; if you read something that is a cachemiss then you go to E (only that set has that memory info)
     for (int i = 0; i < users.size(); i++)
     {
         bool inCurrCore = false; 
         bool inOtherCore = false; 
-        int whichSet = 0;
-        vector<int> allWhichSet;
-        vector <int> allWhichCore;
         int pid = users[i]-1;
         int tag = numbers[i];
-        if (!checkCoreCache(cpu, pid, numbers[i], whichSet))
+        string command = commands[i];
+        if (!checkCoreCache(cpu, pid, numbers[i]))
         {   
-            cacheMisses++;
-            broadcasts++;
-            if (checkAllCoreCache(cpu, numbers[i], allWhichSet, allWhichCore))
+            if (checkAllCoreCache(cpu, numbers[i]))
             {   
                 inOtherCore = true; 
-                cacheToCache++;
             }
         }
         else
         {
             inCurrCore = true; 
-            cacheHits++;
         }
-         
+        
+        if ((command == "read")) // miss so we read of memory and set state to E
+        {
+            if (!inCurrCore)
+            {
+                
+                if (!inOtherCore)
+                {
+                    broadcasts++;
+                    int replacementIndex = findLRU(cpu,pid);
+                    cpu.cores[pid].coreCache[replacementIndex].state = 'E'; 
+                    cpu.cores[pid].coreCache[replacementIndex].tag = tag;
+                    cacheMisses++;
+                }
+                else if (inOtherCore)
+                {
+                    cacheToCache++;
+                    cacheMisses++;
+                    broadcasts++;
+                    vector <int> core, set; 
+                    findTag(cpu, core, set, tag);
+                    for (int i = 0; i < core.size(); i++)
+                    {
+                        if (cpu.cores[core[i]].coreCache[set[i]].state == 'M')
+                        {
+                            cpu.cores[core[i]].coreCache[set[i]].state = 'O';
+                        }
+                    }
+                    int replacementIndex = findLRU(cpu,pid);
+                    cpu.cores[pid].coreCache[replacementIndex].state = 'F';
+                    cpu.cores[pid].coreCache[replacementIndex].tag = tag;
 
-        if ((commands[i]== "read") && !inCurrCore && !inOtherCore) // miss so we read of memory and set state to E
-        {
-            int replacementIndex = findLRU(cpu,pid);
-            cpu.cores[pid].coreCache[replacementIndex].state = 'E'; 
-            cpu.cores[pid].coreCache[replacementIndex].tag = tag; 
+
+                }
+            }
+            else if (inCurrCore)
+            {
+                int setIndex = findTaginCore(cpu,pid, tag);
+                if (cpu.cores[pid].coreCache[setIndex].state == 'I')
+                {
+                    broadcasts++;
+                    cacheMisses++;
+                    vector <int> core, set;
+                    findTag(cpu,core, set, tag);
+                    bool isForwarded = false;
+                    int forwardedCore, forwardedSet = 0;
+                    for (int i = 0; i < core.size(); i++)
+                    {
+                        if (cpu.cores[core[i]].coreCache[set[i]].state == 'F')
+                        {
+                            isForwarded = true;
+                            forwardedCore = core[i];
+                            forwardedSet = set[i];
+                        }
+                    }
+                    if (isForwarded)
+                    {
+                        cpu.cores[pid].coreCache[setIndex].state = 'F';
+                    }
+                    
+                    for (int i = 0; i < core.size(); i++)
+                    {
+                        if (cpu.cores[core[i]].coreCache[set[i]].state == 'M')
+                        {
+                            cpu.cores[core[i]].coreCache[set[i]].state = 'O';
+                        }
+                    }
+                    cpu.cores[pid].coreCache[setIndex].state = 'F';
+                }
+                else
+                {
+                    cacheHits++;
+                }
+
+            }
         } 
-        if ((commands[i] == "write") && !inCurrCore && !inOtherCore)
+        if ((command == "write")) // miss so we read of memory and set state to E
         {
-            int replacementIndex = findLRU(cpu,pid);
-            cpu.cores[pid].coreCache[replacementIndex].state = 'M';
-            cpu.cores[pid].coreCache[replacementIndex].tag = tag;  
-        }
+            if (!inCurrCore)
+            {
+                if (!inOtherCore)
+                {
+                    broadcasts++;
+                    int replacementIndex = findLRU(cpu,pid);
+                    cpu.cores[pid].coreCache[replacementIndex].state = 'M'; 
+                    cpu.cores[pid].coreCache[replacementIndex].tag = tag;
+                    cpu.cores[pid].coreCache[replacementIndex].dirty = true; 
+                    cacheMisses++;
+                }
+                else if (inOtherCore)
+                {
+                    cacheToCache++;
+                    cacheMisses++;
+                    broadcasts++;
+                    int replacementIndex = findLRU(cpu,pid);
+                    vector <int> core, set;
+                    findTag(cpu,core,set,tag);
+                    for (int i = 0; i < core.size(); i++)
+                    {
+                        cpu.cores[core[i]].coreCache[set[i]].state = 'I';
+                    }
+                    cpu.cores[pid].coreCache[replacementIndex].state = 'M'; 
+                    cpu.cores[pid].coreCache[replacementIndex].dirty = true; 
+                    cpu.cores[pid].coreCache[replacementIndex].tag = tag;
+                }
+            }
+            else if (inCurrCore)
+            {
+                int currSet = findTaginCore(cpu, pid, tag);
+                if (cpu.cores[pid].coreCache[currSet].state == 'F')
+                {
+                    broadcasts++;
+                    vector <int> core, set;
+                    findTag(cpu, core, set, tag);
+                    for (int i =0; i < core.size(); i++)
+                    {
+                        if (cpu.cores[core[i]].coreCache[set[i]].state == 'O')
+                        {
+                            writebacks++;
+                            cpu.cores[core[i]].coreCache[set[i]].state = 'I';
+                        }
+                    }
+                    cpu.cores[pid].coreCache[currSet].state = 'M';
+                    cpu.cores[pid].coreCache[currSet].dirty = true;
+                }
+                else 
+                {
+                    cpu.cores[pid].coreCache[currSet].state = 'M';
+
+                }
+                cacheHits++;
+            }
+        } 
+        // if ((commands[i] == "write") && !inCurrCore && !inOtherCore)
+        // {
+        //     int replacementIndex = findLRU(cpu,pid);
+        //     cpu.cores[pid].coreCache[replacementIndex].state = 'M';
+        //     cpu.cores[pid].coreCache[replacementIndex].tag = tag; 
+        //     cacheMisses++; 
+        // }
 
     }
     
@@ -195,7 +324,7 @@ int main(int argc, char* argv[]) {
             cout << "  Cache " << setIndex << ": State=" << cpu.cores[coreIndex].coreCache[setIndex].state << ", LRU=" << cpu.cores[coreIndex].coreCache[setIndex].lru << ", Dirty=" << cpu.cores[coreIndex].coreCache[setIndex].dirty << ", Tag=" << cpu.cores[coreIndex].coreCache[setIndex].tag << endl;
         }
     }
-    cout << "All CPU cores and caches are set up correctly." << endl;
+     cout << "All CPU cores and caches are set up correctly." << endl;
 
 
 
